@@ -42,6 +42,7 @@ class _ChatPageState extends State<ChatPage> {
         _awaitingResponse = false;
       });
     } catch (err) {
+      print(err);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('An error occurred. Please try again.')),
       );

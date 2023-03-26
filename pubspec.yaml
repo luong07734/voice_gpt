@@ -38,6 +38,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   dart_openai: ^1.9.1
   flutter_svg: ^2.0.4
+  flutter_tts: ^3.6.3
+  text_to_speech: ^0.2.3
 
 dev_dependencies:
   flutter_test:
