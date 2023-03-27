@@ -4,7 +4,7 @@ import 'package:voice_gpt/models/chat_message.dart';
 
 class ChatApi {
   ChatApi() {
-    OpenAI.apiKey = "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";
+    OpenAI.apiKey = "";
     // OpenAI.organization = openAiOrg;
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:voice_gpt/data/providers/speech_language.dart';
 
 class MessageComposer extends StatefulWidget {
   MessageComposer({
@@ -34,7 +36,7 @@ class _MessageComposerState extends State<MessageComposer> {
     });
   }
 
-  void _listen() async {
+  void _listen(SpeechLanguageProfile speechLanguageProfile) async {
     print("listen");
     if (!isListening) {
       bool available = await _speech.initialize(
@@ -53,25 +55,25 @@ class _MessageComposerState extends State<MessageComposer> {
         });
 
         _speech.listen(
-          onResult: (result) {
-            setState(() {
-              // update the text in the text field
-              // isListening = false;
-              print(result.recognizedWords);
-              _messageController.text = result.recognizedWords;
-              if (result.finalResult) {
-                if (_messageController.text.isNotEmpty) {
-                  widget.onSubmitted(_messageController.text);
-                  _messageController.clear();
+            onResult: (result) {
+              setState(() {
+                // update the text in the text field
+                // isListening = false;
+                print(result.recognizedWords);
+                _messageController.text = result.recognizedWords;
+                if (result.finalResult) {
+                  if (_messageController.text.isNotEmpty) {
+                    widget.onSubmitted(_messageController.text);
+                    _messageController.clear();
+                  }
+                  isListening = false;
                 }
-                isListening = false;
-              }
-            });
-          },
-          // listenFor: Duration(seconds: 10),
-          // pauseFor: Duration(seconds: 5),
-          // partialResults: true,
-        );
+              });
+            },
+            // listenFor: Duration(seconds: 10),
+            // pauseFor: Duration(seconds: 5),
+            // partialResults: true,
+            localeId: speechLanguageProfile.currentSpeechLanguage);
       } else {
         setState(() {
           print("stop");
@@ -85,6 +87,8 @@ class _MessageComposerState extends State<MessageComposer> {
 
   @override
   Widget build(BuildContext context) {
+    SpeechLanguageProfile speechLanguageProfile =
+        Provider.of<SpeechLanguageProfile>(context);
     return Container(
       padding: const EdgeInsets.all(12),
       color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.05),
@@ -123,7 +127,11 @@ class _MessageComposerState extends State<MessageComposer> {
                       color: Colors.red,
                     )
                   : Icon(Icons.mic),
-              onPressed: isListening ? _stopListening : _listen,
+              onPressed: isListening
+                  ? _stopListening
+                  : () {
+                      _listen(speechLanguageProfile);
+                    },
             ),
             IconButton(
               onPressed: !widget.awaitingResponse

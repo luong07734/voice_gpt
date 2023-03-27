@@ -5,16 +5,23 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:provider/provider.dart';
+import 'package:voice_gpt/data/providers/is_auto_tts.dart';
+import 'package:voice_gpt/data/providers/speech_language.dart';
 
 class MessageBubble extends StatefulWidget {
   const MessageBubble({
     required this.content,
     required this.isUserMessage,
+    required this.languageCode,
+    required this.isAutoRead,
     super.key,
   });
 
   final String content;
   final bool isUserMessage;
+  final String languageCode;
+  final bool isAutoRead;
 
   @override
   State<MessageBubble> createState() => _MessageBubbleState();
@@ -26,9 +33,9 @@ class _MessageBubbleState extends State<MessageBubble> {
   // TextToSpeech tts = TextToSpeech();
   late FlutterTts flutterTts;
 
-  String? language;
+  // late String language;
   String? engine;
-  double volume = 10;
+  double volume = 1.0;
   double pitch = 1.0;
   double rate = 0.5;
   bool isCurrentLanguageInstalled = false;
@@ -109,6 +116,11 @@ class _MessageBubbleState extends State<MessageBubble> {
         ttsState = TtsState.stopped;
       });
     });
+
+    flutterTts.setLanguage(widget.languageCode);
+    if (!widget.isUserMessage && widget.isAutoRead) {
+      _speak(widget.content);
+    }
   }
 
   @override
@@ -140,7 +152,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     await flutterTts.setSpeechRate(rate);
     await flutterTts.setPitch(pitch);
     await flutterTts.setSharedInstance(true);
-    await flutterTts.setLanguage("vi-VN");
+
     _printLanguages();
     print(content);
     if (content != null) {
@@ -172,6 +184,18 @@ class _MessageBubbleState extends State<MessageBubble> {
   @override
   Widget build(BuildContext context) {
     final themeData = Theme.of(context);
+
+    
+    // if (speechLanguageProfile.currentSpeechLanguage ==
+    //     SpeechLanguageProfile.enSpeechLanguageCode) {
+    //   setState(() {
+    //     language = SpeechLanguageProfile.enSpeechLanguageCode;
+    //   });
+    // }
+    // if (autoTTSProfile.autoTTS) {
+    //   flutterTts.setLanguage(speechLanguageProfile.speechLanguageCode);
+    //   _speak(widget.content);
+    // }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,7 +259,11 @@ class _MessageBubbleState extends State<MessageBubble> {
         widget.isUserMessage
             ? Container()
             : IconButton(
-                onPressed: () => _speak(widget.content),
+                onPressed: () {
+                  // flutterTts
+                  //     .setLanguage(speechLanguageProfile.speechLanguageCode);
+                  _speak(widget.content);
+                },
                 icon: Icon(Icons.volume_up),
               ),
 
