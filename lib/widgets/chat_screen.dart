@@ -61,7 +61,7 @@ class _ChatPageState extends State<ChatPage> {
     SpeechLanguageProfile speechLanguageProfile =
         Provider.of<SpeechLanguageProfile>(context);
     AutoTTSProfile autoTTSProfile = Provider.of<AutoTTSProfile>(context);
-        
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
@@ -85,12 +85,13 @@ class _ChatPageState extends State<ChatPage> {
             child: ListView(
               children: [
                 ..._messages.map((msg) {
-                  
                   return MessageBubble(
                     content: msg.content,
                     isUserMessage: msg.isUserMessage,
                     languageCode: speechLanguageProfile.speechLanguageCode,
-                    isAutoRead: _messages.indexOf(msg) == _messages.length-1 ? autoTTSProfile.autoTTS:false,
+                    isAutoRead: _messages.indexOf(msg) == _messages.length - 1
+                        ? autoTTSProfile.autoTTS
+                        : false,
                   );
                 }),
               ],

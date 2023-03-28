@@ -33,3 +33,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+// TODO: xu ly play/stop
+// TODO: xu ly history cua vanban

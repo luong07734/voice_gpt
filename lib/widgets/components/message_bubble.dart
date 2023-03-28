@@ -185,7 +185,6 @@ class _MessageBubbleState extends State<MessageBubble> {
   Widget build(BuildContext context) {
     final themeData = Theme.of(context);
 
-    
     // if (speechLanguageProfile.currentSpeechLanguage ==
     //     SpeechLanguageProfile.enSpeechLanguageCode) {
     //   setState(() {
@@ -258,19 +257,22 @@ class _MessageBubbleState extends State<MessageBubble> {
         ),
         widget.isUserMessage
             ? Container()
-            : IconButton(
-                onPressed: () {
-                  // flutterTts
-                  //     .setLanguage(speechLanguageProfile.speechLanguageCode);
-                  _speak(widget.content);
-                },
-                icon: Icon(Icons.volume_up),
-              ),
+            : !isPlaying
+                ? IconButton(
+                    onPressed: () {
+                      // flutterTts
+                      //     .setLanguage(speechLanguageProfile.speechLanguageCode);
+                      _speak(widget.content);
+                    },
+                    icon: Icon(Icons.play_circle),
+                  )
+                : IconButton(
+                    onPressed: () {
+                      _stop();
+                    },
+                    icon: Icon(Icons.stop_circle),
+                  ),
 
-        // : IconButton(
-        //     onPressed: () => _stop(),
-        //     icon: Icon(Icons.volume_down),
-        //   ),
         widget.isUserMessage
             ? Padding(
                 padding: const EdgeInsets.all(4.0),
