@@ -4,7 +4,7 @@ import 'package:voice_gpt/models/chat_message.dart';
 
 class ChatApi {
   ChatApi() {
-    OpenAI.apiKey = API_KEY;
+    OpenAI.apiKey = "";
     // OpenAI.organization = openAiOrg;
   }
 
@@ -13,7 +13,9 @@ class ChatApi {
       model: MODEL,
       messages: messages
           .map((e) => OpenAIChatCompletionChoiceMessageModel(
-                role: e.isUserMessage ? OpenAIChatMessageRole.user : OpenAIChatMessageRole.assistant,
+                role: e.isUserMessage
+                    ? OpenAIChatMessageRole.user
+                    : OpenAIChatMessageRole.assistant,
                 content: e.content,
               ))
           .toList(),
