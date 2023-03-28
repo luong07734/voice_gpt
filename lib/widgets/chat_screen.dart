@@ -1,9 +1,13 @@
 // chat_page.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voice_gpt/data/apis/chat_apis.dart';
 import 'package:voice_gpt/data/providers/is_auto_tts.dart';
 import 'package:voice_gpt/data/providers/speech_language.dart';
+import 'package:voice_gpt/data/shared_preferences/constants/shared_preferences_keys.dart';
 import 'package:voice_gpt/models/chat_message.dart';
 import 'package:voice_gpt/widgets/components/message_bubble.dart';
 import 'package:voice_gpt/widgets/components/message_compose.dart';
@@ -17,22 +21,66 @@ class ChatPage extends StatefulWidget {
 
   final ChatApi chatApi;
 
+  static _ChatPageState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_ChatPageState>();
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
-  final _messages = <ChatMessage>[
-    // ChatMessage('Hello, how can I help?', false),
-  ];
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
+  // var _messages = <ChatMessage>[
+  //   // ChatMessage('Hello, how can I help?', false),
+  // ];
+
+  List<ChatMessage> _messages = [];
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    print('init state');
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    loadMessages().then((loadedMessages) {
+      setState(() {
+        _messages = loadedMessages;
+        print('load message');
+      });
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
 
   var _awaitingResponse = false;
 
+  Future<void> saveMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = _messages.map((message) => jsonEncode(message)).toList();
+    await prefs.setStringList(SharedPreferenceKeys.messages, jsonList);
+  }
+
+  Future<List<ChatMessage>> loadMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = prefs.getStringList(SharedPreferenceKeys.messages) ?? [];
+    final messages =
+        jsonList.map((json) => ChatMessage.fromJson(jsonDecode(json))).toList();
+    return messages;
+  }
+
+  void _scrollToBottom() async {
+    print("scrolled");
+    await Future.delayed(Duration(milliseconds: 100));
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
   Future<void> _onSubmitted(String message) async {
     setState(() {
-      _messages.add(ChatMessage(message, true));
+      _messages.add(ChatMessage(content: message, isUserMessage: true));
       _awaitingResponse = true;
     });
+    _scrollToBottom();
     try {
       final response;
       if (_messages.length < 6) {
@@ -42,9 +90,10 @@ class _ChatPageState extends State<ChatPage> {
             .completeChat(_messages.sublist(_messages.length - 5));
       }
       setState(() {
-        _messages.add(ChatMessage(response, false));
+        _messages.add(ChatMessage(content: response, isUserMessage: false));
         _awaitingResponse = false;
       });
+      _scrollToBottom();
     } catch (err) {
       print(err);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,6 +103,28 @@ class _ChatPageState extends State<ChatPage> {
         _awaitingResponse = false;
       });
     }
+  }
+
+  void deleteMessages() {
+    print("delete messages of chat screen");
+    setState(() {
+      _messages.clear();
+    });
+  }
+
+  @override
+  void dispose() {
+    print('dispose');
+
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('did change app');
+    saveMessages();
+    print('save message');
   }
 
   @override
@@ -73,7 +144,15 @@ class _ChatPageState extends State<ChatPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => SettingsScreen()),
-              );
+              ).then((result) {
+                // Handle result from second page
+                if (result == true) {
+                  setState(() {
+                    print("delete and refreshui");
+                    _messages.clear();
+                  });
+                }
+              });
               null;
             },
           ),
@@ -83,6 +162,7 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           Expanded(
             child: ListView(
+              controller: _scrollController,
               children: [
                 ..._messages.map((msg) {
                   return MessageBubble(
