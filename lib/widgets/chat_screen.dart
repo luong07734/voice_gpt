@@ -34,6 +34,30 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   List<ChatMessage> _messages = [];
   final ScrollController _scrollController = ScrollController();
+  List<bool> isPlayingList = [];
+  bool isHavingNewMessage = false;
+
+  void playAtIndex(int index) {
+    setState(() {
+      for (int i = 0; i < isPlayingList.length; ++i) {
+        if (index == i) {
+          isPlayingList[index] = true;
+        } else {
+          isPlayingList[i] = false;
+        }
+      }
+    });
+  }
+
+  void allStop() {
+    setState(() {
+      for (int i = 0; i < isPlayingList.length; ++i) {
+        isPlayingList[i] = false;
+      }
+    });
+  }
+
+
 
   @override
   void initState() {
@@ -43,9 +67,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     loadMessages().then((loadedMessages) {
       setState(() {
         _messages = loadedMessages;
+        var fixedList = List.filled(loadedMessages.length, false);
+        isPlayingList = List.from(fixedList);
         print('load message');
       });
     });
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -78,6 +105,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   Future<void> _onSubmitted(String message) async {
     setState(() {
       _messages.add(ChatMessage(content: message, isUserMessage: true));
+      isPlayingList.add(false);
       _awaitingResponse = true;
     });
     _scrollToBottom();
@@ -91,7 +119,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       }
       setState(() {
         _messages.add(ChatMessage(content: response, isUserMessage: false));
+        isPlayingList.add(false);
         _awaitingResponse = false;
+        isHavingNewMessage = true;
       });
       _scrollToBottom();
     } catch (err) {
@@ -109,6 +139,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     print("delete messages of chat screen");
     setState(() {
       _messages.clear();
+      isPlayingList.clear();
     });
   }
 
@@ -132,6 +163,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     SpeechLanguageProfile speechLanguageProfile =
         Provider.of<SpeechLanguageProfile>(context);
     AutoTTSProfile autoTTSProfile = Provider.of<AutoTTSProfile>(context);
+    // if (autoTTSProfile.autoTTS == true) {
+    //   isPlayingList[isPlayingList.length - 1] = true;
+    // }
 
     return Scaffold(
       appBar: AppBar(
@@ -172,6 +206,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     isAutoRead: _messages.indexOf(msg) == _messages.length - 1
                         ? autoTTSProfile.autoTTS
                         : false,
+                    isPlayingList: isPlayingList,
+                    index: _messages.indexOf(msg),
+                    playAtIndex: playAtIndex,
+                    stopAll: allStop,
+                    isHavingNewMessage: isHavingNewMessage,
                   );
                 }),
               ],

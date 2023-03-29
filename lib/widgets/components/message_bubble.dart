@@ -15,6 +15,11 @@ class MessageBubble extends StatefulWidget {
     required this.isUserMessage,
     required this.languageCode,
     required this.isAutoRead,
+    required this.isPlayingList,
+    required this.index,
+    required this.playAtIndex,
+    required this.stopAll,
+    required this.isHavingNewMessage,
     super.key,
   });
 
@@ -22,6 +27,11 @@ class MessageBubble extends StatefulWidget {
   final bool isUserMessage;
   final String languageCode;
   final bool isAutoRead;
+  final List<bool> isPlayingList;
+  final int index;
+  final Function(int index) playAtIndex;
+  final Function stopAll;
+  final bool isHavingNewMessage;
 
   @override
   State<MessageBubble> createState() => _MessageBubbleState();
@@ -54,6 +64,7 @@ class _MessageBubbleState extends State<MessageBubble> {
   @override
   void initState() {
     super.initState();
+
     initTts();
   }
 
@@ -84,6 +95,7 @@ class _MessageBubbleState extends State<MessageBubble> {
 
     flutterTts.setCompletionHandler(() {
       setState(() {
+        widget.stopAll();
         print("Complete");
         ttsState = TtsState.stopped;
       });
@@ -93,6 +105,7 @@ class _MessageBubbleState extends State<MessageBubble> {
       setState(() {
         print("Cancel");
         ttsState = TtsState.stopped;
+        // widget.stopAll();
       });
     });
 
@@ -114,11 +127,15 @@ class _MessageBubbleState extends State<MessageBubble> {
       setState(() {
         print("error: $msg");
         ttsState = TtsState.stopped;
+        // widget.stopAll();
       });
     });
 
     flutterTts.setLanguage(widget.languageCode);
-    if (!widget.isUserMessage && widget.isAutoRead) {
+    if (!widget.isUserMessage &&
+        widget.isAutoRead &&
+        widget.isHavingNewMessage) {
+      print("is having new message ${widget.isHavingNewMessage}");
       _speak(widget.content);
     }
   }
@@ -126,6 +143,7 @@ class _MessageBubbleState extends State<MessageBubble> {
   @override
   void dispose() {
     super.dispose();
+    print("tts dispose ${widget.content}");
     flutterTts.stop();
   }
 
@@ -195,7 +213,10 @@ class _MessageBubbleState extends State<MessageBubble> {
     //   flutterTts.setLanguage(speechLanguageProfile.speechLanguageCode);
     //   _speak(widget.content);
     // }
+    SpeechLanguageProfile speechLanguageProfile =
+        Provider.of<SpeechLanguageProfile>(context);
 
+    // widget.setNotHavingNewMessage();
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,22 +278,25 @@ class _MessageBubbleState extends State<MessageBubble> {
         ),
         widget.isUserMessage
             ? Container()
-            : !isPlaying
+            : (widget.isPlayingList[widget.index] == false)
                 ? IconButton(
                     onPressed: () {
-                      // flutterTts
-                      //     .setLanguage(speechLanguageProfile.speechLanguageCode);
+                      print("on pressed");
+                      _stop();
+                      flutterTts.setLanguage(
+                          speechLanguageProfile.speechLanguageCode);
                       _speak(widget.content);
+                      widget.playAtIndex(widget.index);
                     },
                     icon: Icon(Icons.play_circle),
                   )
                 : IconButton(
                     onPressed: () {
                       _stop();
+                      widget.stopAll();
                     },
                     icon: Icon(Icons.stop_circle),
                   ),
-
         widget.isUserMessage
             ? Padding(
                 padding: const EdgeInsets.all(4.0),
