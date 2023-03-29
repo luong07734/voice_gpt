@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:voice_gpt/data/apis/chat_apis.dart';
 import 'package:voice_gpt/data/providers/is_auto_tts.dart';
 import 'package:voice_gpt/data/providers/speech_language.dart';
 import 'package:voice_gpt/widgets/chat_screen.dart';
 
-void main() {
+Future main() async {
+  await dotenv.load(fileName: ".env");
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider<SpeechLanguageProfile>(
         create: (_) => SpeechLanguageProfile()),
