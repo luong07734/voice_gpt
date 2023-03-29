@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voice_gpt/data/providers/is_auto_tts.dart';
 import 'package:voice_gpt/data/providers/speech_language.dart';
+import 'package:voice_gpt/data/shared_preferences/constants/shared_preferences_keys.dart';
+import 'package:voice_gpt/widgets/chat_screen.dart';
 import 'package:voice_gpt/widgets/components/custom_switch.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -12,6 +15,24 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isToggleOn = true;
   String _selectedLanguage = 'English';
+  late SharedPreferences _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSharedPreferences();
+  }
+
+  void _initSharedPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  void _deleteData() async {
+    await _prefs.remove(SharedPreferenceKeys.messages);
+    print('delete messages');
+    // Refresh UI if necessary
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +147,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     }).toList(),
                   ),
                 ],
+              ),
+            ),
+            SizedBox(height: 24.0),
+            Container(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  _deleteData();
+                  // ChatPage.of(context)?.deleteMessages();
+                  Navigator.pop(context, true);
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  backgroundColor: Colors.blue,
+                  elevation: 10,
+                ),
+                child: Text(
+                  'Delete all messages',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],

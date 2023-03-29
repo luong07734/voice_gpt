@@ -1,10 +1,11 @@
 import 'package:dart_openai/openai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:voice_gpt/data/apis/constants/api_constants.dart';
 import 'package:voice_gpt/models/chat_message.dart';
 
 class ChatApi {
   ChatApi() {
-    OpenAI.apiKey = "";
+    OpenAI.apiKey = dotenv.env['API_KEY']!;
     // OpenAI.organization = openAiOrg;
   }
 
