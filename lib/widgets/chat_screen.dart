@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voice_gpt/data/apis/chat_apis.dart';
@@ -36,6 +37,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final ScrollController _scrollController = ScrollController();
   List<bool> isPlayingList = [];
   bool isHavingNewMessage = false;
+  late InterstitialAd _interstitialAd;
+  bool _isInterstitialAdReady = false;
 
   void playAtIndex(int index) {
     setState(() {
@@ -57,8 +60,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     });
   }
 
-
-
   @override
   void initState() {
     print('init state');
@@ -72,8 +73,37 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         print('load message');
       });
     });
+    _createInterstitialAd();
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  void _createInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: "ca-app-pub-3940256099942544/1033173712",
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          setState(() {
+            _interstitialAd = ad;
+            _isInterstitialAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (error) {
+          print('InterstitialAd failed to load: $error');
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_isInterstitialAdReady) {
+      _interstitialAd.show();
+      _isInterstitialAdReady = false;
+      _createInterstitialAd();
+    } else {
+      print('Interstitial ad is not ready yet.');
+    }
   }
 
   var _awaitingResponse = false;
@@ -122,6 +152,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         isPlayingList.add(false);
         _awaitingResponse = false;
         isHavingNewMessage = true;
+        print("ads ${_messages.length}");
+        if (_messages.length % 4 == 0) {
+          print("it's ads time");
+          _showInterstitialAd();
+        }
       });
       _scrollToBottom();
     } catch (err) {
@@ -148,6 +183,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     print('dispose');
 
     WidgetsBinding.instance.removeObserver(this);
+    _interstitialAd.dispose();
     super.dispose();
   }
 
