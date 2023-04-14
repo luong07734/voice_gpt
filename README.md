@@ -9,6 +9,6 @@ Lucas - VoiceGPT
 Resources for assessment:
 
 - [Youtube Demo](https://youtu.be/SVw2zIoTYpw)
-- [Google PlayStore link](___ reviewing)
+- [Google PlayStore link](https://play.google.com/store/apps/details?id=com.luonglk.voicegpt)
 
 
